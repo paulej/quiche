@@ -665,12 +665,12 @@ impl Handshake {
 
     pub fn curve(&self) -> Option<String> {
         let curve = unsafe {
-            let curve_id = SSL_get_curve_id(self.as_ptr());
+            let curve_id = SSL_get_group_id(self.as_ptr());
             if curve_id == 0 {
                 return None;
             }
 
-            let curve_name = SSL_get_curve_name(curve_id);
+            let curve_name = SSL_get_group_name(curve_id);
             match ffi::CStr::from_ptr(curve_name).to_str() {
                 Ok(v) => v,
 
@@ -704,7 +704,7 @@ impl Handshake {
             let chain =
                 map_result_ptr(SSL_get0_peer_certificates(self.as_ptr())).ok()?;
 
-            let num = sk_num(chain);
+            let num = OPENSSL_sk_num(chain);
             if num == 0 {
                 return None;
             }
@@ -712,7 +712,7 @@ impl Handshake {
             let mut cert_chain = vec![];
             for i in 0..num {
                 let buffer =
-                    map_result_ptr(sk_value(chain, i) as *const CRYPTO_BUFFER)
+                    map_result_ptr(OPENSSL_sk_value(chain, i) as *const CRYPTO_BUFFER)
                         .ok()?;
 
                 let out_len = CRYPTO_BUFFER_len(buffer);
@@ -736,12 +736,12 @@ impl Handshake {
         let peer_cert = unsafe {
             let chain =
                 map_result_ptr(SSL_get0_peer_certificates(self.as_ptr())).ok()?;
-            if sk_num(chain) == 0 {
+            if OPENSSL_sk_num(chain) == 0 {
                 return None;
             }
 
             let buffer =
-                map_result_ptr(sk_value(chain, 0) as *const CRYPTO_BUFFER)
+                map_result_ptr(OPENSSL_sk_value(chain, 0) as *const CRYPTO_BUFFER)
                     .ok()?;
 
             let out_len = CRYPTO_BUFFER_len(buffer);
@@ -1365,8 +1365,8 @@ extern {
 
     fn SSL_get_current_cipher(ssl: *const SSL) -> *const SSL_CIPHER;
 
-    fn SSL_get_curve_id(ssl: *const SSL) -> u16;
-    fn SSL_get_curve_name(curve: u16) -> *const c_char;
+    fn SSL_get_group_id(ssl: *const SSL) -> u16;
+    fn SSL_get_group_name(curve: u16) -> *const c_char;
 
     fn SSL_get_peer_signature_algorithm(ssl: *const SSL) -> u16;
     fn SSL_get_signature_algorithm_name(
@@ -1470,8 +1470,8 @@ extern {
     fn d2i_X509(px: *mut X509, input: *const *const u8, len: c_int) -> *mut X509;
 
     // STACK_OF
-    fn sk_num(stack: *const STACK_OF) -> usize;
-    fn sk_value(stack: *const STACK_OF, idx: usize) -> *mut c_void;
+    fn OPENSSL_sk_num(stack: *const STACK_OF) -> usize;
+    fn OPENSSL_sk_value(stack: *const STACK_OF, idx: usize) -> *mut c_void;
 
     // CRYPTO_BUFFER
     fn CRYPTO_BUFFER_len(buffer: *const CRYPTO_BUFFER) -> usize;

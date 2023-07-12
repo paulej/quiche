@@ -255,10 +255,10 @@ fn main() {
     }
 
     // MacOS: Allow cdylib to link with undefined symbols
-    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
-    if target_os == "macos" {
-        println!("cargo:rustc-cdylib-link-arg=-Wl,-undefined,dynamic_lookup");
-    }
+    // let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
+    // if target_os == "macos" {
+    //     println!("cargo:rustc-cdylib-link-arg=-Wl,-undefined,dynamic_lookup");
+    // }
 
     if cfg!(feature = "pkg-config-meta") {
         write_pkg_config();
