@@ -247,6 +247,23 @@ fn main() {
             .unwrap_or("static".to_string());
         println!("cargo:rustc-link-lib={bssl_link_kind}=ssl");
         println!("cargo:rustc-link-lib={bssl_link_kind}=crypto");
+
+        // PEJ added to facilitate finding external BoringSSL libraries
+        let bssl_search_kind = std::env::var("QUICHE_BSSL_SEARCH_KIND").unwrap_or("native".to_string());
+        match bssl_search_kind.as_str() {
+            "native" => {
+                let bssl_search_path = std::env::var("QUICHE_BSSL_SEARCH_PATH").unwrap_or("".to_string());
+                for path in bssl_search_path.split(",") {
+                    println!("cargo:rustc-link-search={bssl_search_kind}={path}");
+                }
+            },
+            "framework" => {
+                // Placeholder if required
+            },
+            _ => {
+                // Nothing to do
+            }
+        }
     }
 
     if cfg!(feature = "boringssl-boring-crate") {
